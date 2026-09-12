@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="titleElement">Unicode Table (U+000000 ~ U+00FFFF)</title>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+        }
+        table {
+            background-color: #444;
+        }
+        th, td {
+            padding: 5px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="h1Element">Unicode Table (U+000000 ~ U+00FFFF)</h1>
+    <table>
+        <tbody id="unicodeTable"></tbody>
+    </table>
+    <script>
+        const unicodeTable = document.getElementById('unicodeTable');
+
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+
+        const offset = parseInt(urlParams.get('planeNumber')) || 0;
+
+        const titleElement = document.getElementById('titleElement');
+        const h1Element = document.getElementById('h1Element');
+
+        const offsetLetter = offset.toString(16).padStart(2, '0').toUpperCase();
+
+        const titleText = 'Unicode Table (U+' + offsetLetter + '0000 ~ U+' + offsetLetter + 'FFFF)';
+
+        titleElement.innerHTML = titleText;
+        h1Element.innerHTML = titleText;
+
+        function createTableRow(iteratorGenerator) {
+            const iterator = iteratorGenerator();
+            const tableRow = document.createElement('tr');
+            for (const tableItem of iterator) {
+                tableRow.append(tableItem);
+            }
+            return tableRow;
+        }
+        function createTableItem(contents, isDark = false) {
+            const tableItem = document.createElement('td');
+            tableItem.append(contents);
+            tableItem.style.backgroundColor = isDark ? '#888' : '#ccc';
+            return tableItem;
+        }
+
+        function createContents(contents) {
+            return document.createTextNode(contents);
+        }
+        function createBoldElement(contents) {
+            const boldElement = document.createElement('b');
+            boldElement.appendChild(createContents(contents));
+            return boldElement;
+        }
+
+        for (let blockIndex = 0; blockIndex < 256; blockIndex++) {
+            const isDark = blockIndex % 2 === 1;
+
+            unicodeTable.append(createTableRow(function* () {
+                const blockHexCode = '0x' + (offset * 256 + blockIndex).toString(16).padStart(4, '0').toUpperCase();
+                yield createTableItem(createBoldElement(blockHexCode), isDark);
+                for (let columnIndex = 0; columnIndex < 16; columnIndex++) {
+                    yield createTableItem(createBoldElement(columnIndex.toString(16)), isDark);
+                }
+            }));
+
+            for (let rowIndex = 0; rowIndex < 16; rowIndex++) {
+                unicodeTable.append(createTableRow(function* () {
+                    yield createTableItem(createBoldElement(rowIndex.toString(16).toUpperCase()), isDark);
+                    for (let columnIndex = 0; columnIndex < 16; columnIndex++) {
+                        const charCode = offset * 65536 + blockIndex * 256 + rowIndex * 16 + columnIndex;
+                        const character = String.fromCodePoint(charCode);
+                        yield createTableItem(character, isDark);
+                    }
+                }));
+            }
+        }
+    </script>
+</body>
+</html>
